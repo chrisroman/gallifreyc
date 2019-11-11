@@ -26,7 +26,7 @@ import polyglot.parse.VarDeclarator;
 /** CUP v0.11b 20150326 generated parser.
   */
 public class Grm
- extends polyglot.parse.Grm {
+ extends polyglot.ext.jl7.parse.Grm {
 
 
   /** Production table. */
