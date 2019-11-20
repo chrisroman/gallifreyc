@@ -15,6 +15,7 @@ import polyglot.ext.jl7.ast.*;
 import polyglot.ext.jl7.types.*;
 import gallifreyc.types.GallifreyTypeSystem;
 import gallifreyc.ast.GallifreyNodeFactory;
+import gallifreyc.ast.*;
 import polyglot.parse.Name;
 import polyglot.parse.VarDeclarator;
 
@@ -277,6 +278,26 @@ non terminal List<LocalDecl> resources;
 non terminal LocalDecl resource;
 non terminal List<TypeNode> catch_type;
 non terminal Block finally_opt;
+terminal Token ALLOWS;
+terminal Token BRANCH;
+terminal Token CONTINGENT;
+terminal Token DELETE;
+terminal Token ENSURES;
+terminal Token LOCAL;
+terminal Token MATCH_RESTRICTION;
+terminal Token MERGE;
+terminal Token REQUIRES;
+terminal Token RESTRICTION;
+terminal Token SHARED;
+terminal Token TEST;
+terminal Token THREAD;
+terminal Token TRANSITION;
+terminal Token UNIQUE;
+terminal Token WHEN;
+terminal Token WHERE;
+terminal Token WITH;
+non terminal PreCondition pre_condition_opt;
+non terminal PostCondition post_condition_opt;
 
 
 start with goal;
@@ -853,7 +874,9 @@ constant_declaration ::=
     field_declaration:a {:  RESULT = a;  :};
 
 abstract_method_declaration ::=
-    method_header:a SEMICOLON {:  RESULT = a;  :};
+    method_header:a pre_condition_opt:b post_condition_opt:c SEMICOLON {:
+                                                                       RESULT = parser.nf.MethodDecl(a.position(), a, b, c); 
+                                                                       :};
 
 array_initializer ::=
     LBRACE:n variable_initializers:a COMMA RBRACE:d {:
@@ -2365,5 +2388,17 @@ catch_type ::=
 		as.add(a.toType());
 		RESULT = as;
 	 :};
+
+pre_condition_opt ::=
+    {:  RESULT = null;  :}
+ |  REQUIRES:a expression:b {:
+                            RESULT = parser.nf.PreCondition(parser.pos(a, b), b); 
+                            :};
+
+post_condition_opt ::=
+    {:  RESULT = null;  :}
+ |  ENSURES:a expression:b {:
+                           RESULT = parser.nf.PostCondition(parser.pos(a, b), b); 
+                           :};
 
 
