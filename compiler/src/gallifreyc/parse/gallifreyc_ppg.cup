@@ -299,6 +299,15 @@ terminal Token WITH;
 non terminal PreCondition pre_condition_opt;
 non terminal PostCondition post_condition_opt;
 non terminal RefQualification ref_qualification;
+non terminal RestrictionDecl restriction_declaration_opt;
+non terminal RestrictionDecl restriction_declaration;
+non terminal RestrictionBody restriction_body;
+non terminal List<Node> restriction_body_declarations_opt;
+non terminal List<Node> restriction_body_declarations;
+non terminal List<Node> restriction_body_declaration;
+non terminal RestrictionMember allows_stmt;
+non terminal MethodDecl test_declaration;
+non terminal MethodDecl test_header;
 
 
 start with goal;
@@ -436,15 +445,15 @@ qualified_name ::=
                             :};
 
 compilation_unit ::=
-    package_declaration_opt:a import_declarations_opt:b type_declarations_opt:c {:
-                                                                                RESULT = parser.nf.SourceFile(new Position(parser.lexer.path(), parser.lexer.file()),
-					     a, b, c);
-	    
-                                                                                :}
+    package_declaration_opt:a import_declarations_opt:b type_declarations_opt:c restriction_declaration_opt:d {:
+                                                                                                              RESULT = parser.nf.SourceFile(new Position(parser.lexer.path(), parser.lexer.file()),
+                                     a, b, c);
+     
+                                                                                                              :}
  |  error type_declarations_opt:c {:
                                   RESULT = parser.nf.SourceFile(new Position(parser.lexer.path(), parser.lexer.file()),
-					     null, Collections.<Import> emptyList(), c);
-	    
+                                     null, Collections.<Import> emptyList(), c);
+     
                                   :};
 
 package_declaration_opt ::=
@@ -2414,5 +2423,78 @@ post_condition_opt ::=
  |  ENSURES:a expression:b {:
                            RESULT = parser.nf.PostCondition(parser.pos(a, b), b); 
                            :};
+
+restriction_declaration_opt ::=
+    {:  RESULT = null;  :}
+ |  restriction_declaration:a {:  RESULT = a;  :};
+
+restriction_declaration ::=
+    RESTRICTION:a IDENTIFIER:b FOR IDENTIFIER:c restriction_body:d {:
+                                                                   RESULT = parser.nf.RestrictionDecl(parser.pos(a, d),
+                                          parser.nf.Id(parser.pos(b), b.getIdentifier()),
+                                          parser.nf.Id(parser.pos(c), c.getIdentifier()),
+                                          d); 
+                                                                   :};
+
+restriction_body ::=
+    LBRACE:a restriction_body_declarations_opt:b RBRACE:c {:
+                                                          RESULT = parser.nf.RestrictionBody(parser.pos(a, c), b); 
+                                                          :};
+
+restriction_body_declarations_opt ::=
+    {:  RESULT = new LinkedList<>();  :}
+ |  restriction_body_declarations:a {:  RESULT = a;  :};
+
+restriction_body_declarations ::=
+    restriction_body_declaration:a {:  RESULT = a;  :}
+ |  restriction_body_declarations:a restriction_body_declaration:b {:
+                                                                  
+ RESULT = a;
+ a.addAll(b);
+ 
+                                                                   :};
+
+restriction_body_declaration ::=
+    SEMICOLON {: 
+ List<Node> l = new LinkedList<>();
+ RESULT = l;
+  :}
+ |  allows_stmt:a SEMICOLON {:
+                           
+     List<Node> l = new LinkedList<>();
+     l.add(a);
+     RESULT = l;
+     
+                            :}
+ |  test_declaration:a {:
+                      
+ List<Node> l = new LinkedList<>();
+ l.add(a);
+ RESULT = l;
+ 
+                       :};
+
+allows_stmt ::=
+    ALLOWS:a IDENTIFIER:b {:
+                          RESULT = parser.nf.AllowsStmt(parser.pos(a, b),
+                                     parser.nf.Id(parser.pos(b), b.getIdentifier())); 
+                          :}
+ |  ALLOWS:a IDENTIFIER:b CONTINGENT IDENTIFIER:c {:
+                                                  RESULT = parser.nf.AllowsStmt(parser.pos(a, b),
+                                 parser.nf.Id(parser.pos(b), b.getIdentifier()),
+                                 parser.nf.Id(parser.pos(c), c.getIdentifier())); 
+                                                  :};
+
+test_declaration ::=
+    test_header:a method_body:b {:  RESULT = (MethodDecl) a.body(b);  :};
+
+test_header ::=
+    modifiers_or_annotations_opt:a TEST:b IDENTIFIER:c LPAREN formal_parameter_list_opt:d RPAREN:g throws_opt:f {:
+                                                                                                                RESULT = parser.nf.MethodDecl(parser.pos(b, g, c), a,
+                                     parser.nf.CanonicalTypeNode(parser.pos(b),
+                                                                 parser.ts.Boolean()),
+                                     parser.nf.Id(parser.pos(c), c.getIdentifier()),
+                                     d, f, null, true); 
+                                                                                                                :};
 
 
