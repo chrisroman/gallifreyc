@@ -298,6 +298,7 @@ terminal Token WHERE;
 terminal Token WITH;
 non terminal PreCondition pre_condition_opt;
 non terminal PostCondition post_condition_opt;
+non terminal RefQualification ref_qualification;
 
 
 start with goal;
@@ -347,7 +348,12 @@ boundary_literal ::=
 
 type ::=
     primitive_type:a {:  RESULT = a;  :}
- |  reference_type:a {:  RESULT = a;  :};
+ |  ref_qualification:r reference_type:a {:
+                                        
+ //RESULT = parser.nf.RefQualifiedTypeNode(parser.pos(r, a), r, a);
+ RESULT = a;
+ 
+                                         :};
 
 primitive_type ::=
     numeric_type:a {:  RESULT = a;  :}
@@ -2388,6 +2394,14 @@ catch_type ::=
 		as.add(a.toType());
 		RESULT = as;
 	 :};
+
+ref_qualification ::=
+    LOCAL:a {:  RESULT = parser.nf.LocalRef(parser.pos(a));  :}
+ |  UNIQUE:a {:  RESULT = parser.nf.UniqueRef(parser.pos(a));  :}
+ |  SHARED:a LBRACK IDENTIFIER:b RBRACK:c {:
+                                          RESULT = parser.nf.SharedRef(parser.pos(a,c),
+                                parser.nf.Id(parser.pos(b), b.getIdentifier())); 
+                                          :};
 
 pre_condition_opt ::=
     {:  RESULT = null;  :}
