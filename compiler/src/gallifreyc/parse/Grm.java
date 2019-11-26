@@ -5835,8 +5835,8 @@ class CUP$Grm$actions {
                 TypeNode a = CUP$Grm$stack.peek().<TypeNode> value();
                 
                                         
- //RESULT = parser.nf.RefQualifiedTypeNode(parser.pos(r, a), r, a);
- RESULT = a;
+ RESULT = parser.nf.RefQualifiedTypeNode(parser.pos(r, a), r, a);
+ //RESULT = a;
  
                                          
                 CUP$Grm$result = parser.getSymbolFactory().newSymbol("type",3, RESULT);
